@@ -15,16 +15,17 @@ import rospy
 from sensor_msgs.msg   import LaserScan
 from geometry_msgs.msg import Twist
 
-EQUIPO = "COLOQUE AQUI EL NOMBRE DE SU EQUIPO"
+EQUIPO = "MecaSystem"
 
-def callback_scan(msg):
+def callback_scan(msg): 
     global obstacle_detected
     #
     # EJERCICIO:
     # Haga algo para detectar si hay un obstaculo enfrente del robot.
     # Asigne True o False a la variable 'obstacle_detected'.
     #
-    
+    n = int((msg.angle_max - msg.angle_min)/msg.angle_increment/2)
+    obstacle_detected = msg.ranges[n] < 1.0
     
     return
 
@@ -46,6 +47,9 @@ def main():
         # Use la variable 'obstacle_detected' para revisar si hay o no obstaculo al frente.
         # Publique el mensaje de tipo Twist usando el publicador 'pub_cmd_vel'.
         #
+        msg_cmd_vel = Twist()
+        msg_cmd_vel.linear.x = 0 if obstacle_detected else 0.3 
+        pub_cmd_vel.publish(msg_cmd_vel)
         
         loop.sleep()
 
