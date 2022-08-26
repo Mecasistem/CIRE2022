@@ -11,6 +11,7 @@ import smach
 import ros_numpy
 from utils_evasion import *
 import tf2_ros
+from tf.transformations import euler_from_quaternion, quaternion_from_euler
 
 
 ########## Functions for takeshi states ##########
@@ -102,8 +103,8 @@ class Inicio (smach.State):
          ##### EJEMPLO los equipos deben leer la meta del topico, comentar esta linea
         ####################################################################
         punto_inicial = get_coords()
-        print ( 'tiempo = '+ str(punto_inicial.header.stamp.to_sec()) , punto_inicial.transform )
-        #print ('meta leida', meta_leida)
+        print('Tiempo = '+ str(punto_inicial.header.stamp.to_sec()) , punto_inicial.transform )
+        print('Meta leida: \n', meta.get_metaPosition())
         print('arrancando')
         return 'succ'
 
@@ -111,15 +112,39 @@ class S1(smach.State):
     def __init__(self):
         smach.State.__init__(self, outcomes=['outcome1','outcome2'])
         self.counter = 0
-        
-
 
     def execute(self,userdata):
-    	# Aqui va lo que se desea ejecutar en el estado
-
+    	# Primer estado: girar robot hacia posicion objetivo 
         print('robot Estado S_1')
         #####Accion
-        move_backward()
+        tetha = 0
+        meta_x, meta_y = meta.get_metaPosition().pose.position.x,meta.get_metaPosition().pose.position.y
+        pos_now_x = get_coords().transform.translation.x
+        pos_now_y = get_coords().transform.translation.y
+
+        x = meta_x - pos_now_x
+        y = meta_y - pos_now_y
+        
+        robot_or = euler_from_quaternion([0,0,float(get_coords().transform.rotation.z),float(get_coords().transform.rotation.w)])
+       
+       
+        print("x:",x)
+        print("y:", y)
+        
+
+        if x > 0:
+            tetha = np.arctan(y/x) - robot_or[2] 
+            move_base(0,0,tetha,timeout=1)
+        elif x < 0:
+            if y > 0:
+                tetha = np.pi - np.arctan(y/x) - robot_or[2]  
+            elif y < 0:
+                tetha = np.arctan(y/x) - np.pi - robot_or[2] 
+            move_base(0,0,tetha,timeout=1)
+
+        print("theta: ",tetha)
+      
+        
         return 'outcome1'
 
 
