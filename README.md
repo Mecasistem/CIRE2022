@@ -47,4 +47,5 @@ Facultad de Ingeniería, UNAM <br>
 marco.negrete@ingenieria.unam.edu<br>
 
 ## Ubicación de los archivos
-Los programas resolviendo el programa de la etapa 2 se encuentran en: 
+El paquete resolviendo el problema de la etapa 2 se encuentran en: CIRE2022/catkin_ws/src/
+Llamado stage02_meta en el programa llamado staga02_meta.py
