@@ -45,3 +45,6 @@ Departamento de Procesamiento de Señales<br>
 Facultad de Ingeniería, UNAM <br>
 [mnegretev.info](http://mnegretev.info)<br>
 marco.negrete@ingenieria.unam.edu<br>
+
+## Ubicación de los archivos
+Los programas resolviendo el programa de la etapa 2 se encuentran en: 
