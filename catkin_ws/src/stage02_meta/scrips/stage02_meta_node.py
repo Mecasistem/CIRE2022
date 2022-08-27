@@ -45,31 +45,33 @@ def move_base(x,y,yaw,timeout=5):
 
 
 def move_forward():
-    move_base(0.15,0,0,2.5)
+    move_base(0.3,0,0,3)
 def move_backward():
-    move_base(-0.15,0,0,1.5)
+    move_base(-.3,0,0,3)
 def turn_left():
-    move_base(0.0,0,0.12*np.pi,2)
+    move_base(0.0,0,0.125*np.pi,2)
 def turn_right():
-    move_base(0.0,0,-0.12*np.pi,2)
+    move_base(0.0,0,-0.125*np.pi,2)
 
 def get_lectura_cuant():
     try:
         lectura=np.asarray(laser.get_data().ranges)
         lectura=np.where(lectura>20,20,lectura) #remove infinito
 
-        right_scan=lectura[:300]
-        left_scan=lectura[300:]
-        ront_scan=lectura[300:360]
+        right_scan=lectura[60:180]
+        left_scan=lectura[540:660]
+        front_scan=lectura[345:375]
 
-        sd,si=0,0
-        if np.mean(left_scan)< 3: si=1
-        if np.mean(right_scan)< 3: sd=1
+        sd = np.mean(right_scan)
+        si = np.mean(left_scan)
+        ft = np.mean(front_scan)
+        # if np.mean(left_scan)< 3: si=1
+        # if np.mean(right_scan)< 3: sd=1
 
     except:
-        sd,si=0,0    
+        sd,si,ft=0,0    
 
-    return si,sd
+    return si,sd,ft
 
 
 
@@ -143,12 +145,55 @@ class S1(smach.State):
             move_base(0,0,tetha,timeout=1)
 
         print("theta: ",tetha)
-      
+        time.sleep(3)
         
         return 'outcome1'
 
-
 class S2(smach.State):
+    def __init__(self):
+        smach.State.__init__(self, outcomes=['outcome1','outcome2'])
+      
+
+    def execute(self,userdata):
+        #Segundo estado checar si hay objeto delante de el 
+        print('robot Estado S_2')
+        #####Accion
+        si,sd,ft=get_lectura_cuant()
+
+        if ft <= 1: #Hay un objeto enfrente (1m)
+            print("tf:",ft)
+            return 'outcome1'
+        else:
+            print("Me movi adelante")
+            move_forward()
+            return 'outcome2'
+
+class S3(smach.State):
+    def __init__(self):
+        smach.State.__init__(self, outcomes=['outcome1','outcome2'])
+      
+
+    def execute(self,userdata):
+        #Segundo estado checar si hay objetos en la izquierda o derecha
+        print('robot Estado S_3')
+        #####Accion
+        si,sd,ft=get_lectura_cuant()
+
+        if si <= 1: #Hay un objeto a la izquierda(1m)
+            print(si)
+            if sd <= 1: #Hay un Objeto a la derecha(1m)
+                print(sd)
+                move_backward()
+                return 'outcome2'
+            else:
+                turn_right()
+                return 'outcome1'
+        else:
+            turn_left()
+            return 'outcome1'
+
+
+class Final(smach.State):
     def __init__(self):
         smach.State.__init__(self, outcomes=['outcome1','outcome2'])
       
@@ -156,13 +201,24 @@ class S2(smach.State):
 
 
     def execute(self,userdata):
-        print('robot Estado S_2')
+        #Determina si llega a la meta, si no repite el ciclo de nuevo
+        print('robot Estado S_Final')
         #####Accion
-        punto_final=get_coords()
-        print ( 'tiempo = '+ str(punto_final.header.stamp.to_sec()) , punto_final.transform )
+        tetha = 0
+        meta_x, meta_y = meta.get_metaPosition().pose.position.x,meta.get_metaPosition().pose.position.y
+        pos_now_x = get_coords().transform.translation.x
+        pos_now_y = get_coords().transform.translation.y
 
+        x = meta_x - pos_now_x
+        y = meta_y - pos_now_y
 
-        return 'outcome1'
+        if abs(x) < 0.5 and abs(y) < 0.5:
+            print("LLegaste al destino")
+            punto_final=get_coords()
+            print ( 'tiempo = '+ str(punto_final.header.stamp.to_sec()) , punto_final.transform )
+            return 'outcome2'
+        else:
+            return 'outcome1'
 
 
 
@@ -171,11 +227,12 @@ class S2(smach.State):
 
 
 def init(node_name):
-    global laser, base_vel_pub, meta
+    global laser, base_vel_pub, meta, loop
     rospy.init_node(node_name)
     base_vel_pub = rospy.Publisher('/hsrb/command_velocity', Twist, queue_size=10)
     laser = Laser()  
     meta = metaPoint()
+    loop = rospy.Rate(10)
 
 
 #Entry point
@@ -191,7 +248,9 @@ if __name__== '__main__':
         #State machine for evasion
         smach.StateMachine.add("INICIO",   Inicio(),  transitions = {'fail':'END', 'succ':'s_1'})
         smach.StateMachine.add("s_1",   S1(),  transitions = {'outcome1':'s_2','outcome2':'END'})
-        smach.StateMachine.add("s_2",   S2(),  transitions = {'outcome1':'END','outcome2':'END'})
+        smach.StateMachine.add("s_2",   S2(),  transitions = {'outcome1':'s_3','outcome2':'s_1'})
+        smach.StateMachine.add("s_3",   S3(),  transitions = {'outcome1':'FINAL','outcome2':'s_3'})
+        smach.StateMachine.add("FINAL",   Final(),  transitions = {'outcome1':'s_2','outcome2':'END'})
         
 
 
