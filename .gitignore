@@ -3,3 +3,4 @@
 *.user
 #*#
 JupiterNotebooks/
+catkin_ws/src/stage02_meta/scrips
