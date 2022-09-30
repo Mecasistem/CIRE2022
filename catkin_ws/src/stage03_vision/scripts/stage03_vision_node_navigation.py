@@ -122,13 +122,14 @@ class S1(smach.State):
         #####Accion
         tetha = 0
         meta_x, meta_y = meta.get_metaPosition().pose.position.x,meta.get_metaPosition().pose.position.y
-        pos_now_x = get_coords().transform.translation.x
-        pos_now_y = get_coords().transform.translation.y
-
-        x = meta_x - pos_now_x
-        y = meta_y - pos_now_y
         
-        robot_or = euler_from_quaternion([0,0,float(get_coords().transform.rotation.z),float(get_coords().transform.rotation.w)])
+        pos_now = get_coords()
+        now_x,now_y = pos_now.transform.translation.x, pos_now.transform.translation.y
+
+        x = meta_x - now_x
+        y = meta_y - now_y
+        
+        robot_angle = euler_from_quaternion([0,0,float(pos_now.transform.rotation.z),float(pos_now.transform.rotation.w)])[2]
        
        
         print("x:",x)
@@ -136,14 +137,30 @@ class S1(smach.State):
         
 
         if x > 0:
-            tetha = np.arctan(y/x) - robot_or[2] 
+            if y > 0:
+                tetha = np.arctan(y/x) - robot_angle
+            elif y < 0:
+                tetha = np.arctan(y/x) - robot_angle
+            elif y < 0.1 and y > -0.1: #pasa a ser condireado como cero
+                tetha = 0
+
             move_base(0,0,tetha,timeout=1)
+            print(f"Angulo de movimiento: {tetha}")
         elif x < 0:
             if y > 0:
-                tetha = np.pi - np.arctan(y/x) - robot_or[2]  
+                tetha = np.pi + (np.arctan(y/x) - robot_angle) 
             elif y < 0:
-                tetha = np.arctan(y/x) - np.pi - robot_or[2] 
+                tetha = (np.arctan(y/x) - robot_angle) - np.pi
+            elif y < 0.1 and y -0.1:
+                tetha = np.pi
+
             move_base(0,0,tetha,timeout=1)
+            print(f"Angulo de movimiento: {tetha}")
+        elif x < 0.001 and x > -0.001:
+            if y > 0:
+                tetha = np.pi/2
+            elif y < 0:
+                tetha = 3*(np.pi/2)
 
         print("theta: ",tetha)
         time.sleep(3)
@@ -275,6 +292,7 @@ if __name__== '__main__':
         #State machine for evasion
         smach.StateMachine.add("INICIO",   Inicio(),  transitions = {'fail':'END', 'succ':'s_1'})
         smach.StateMachine.add("s_1",   S1(),  transitions = {'outcome1':'s_2','outcome2':'END'})
+        #smach.StateMachine.add("s_1",   S1(),  transitions = {'outcome1':'END','outcome2':'END'})
         smach.StateMachine.add("s_2",   S2(),  transitions = {'outcome1':'s_3','outcome2':'s_2_5'})
         smach.StateMachine.add("s_2_5",   S2_5(),  transitions = {'outcome1':'s_1','outcome2':'END'})
         smach.StateMachine.add("s_3",   S3(),  transitions = {'outcome1':'FINAL','outcome2':'s_3'})
