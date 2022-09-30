@@ -197,12 +197,12 @@ class S2_5(smach.State):
         #####Accion
         tetha = 0
         meta_x, meta_y = meta.get_metaPosition().pose.position.x,meta.get_metaPosition().pose.position.y
-        pos_now_x = get_coords().transform.translation.x
-        pos_now_y = get_coords().transform.translation.y
+        pos_now = get_coords()
+        now_x = pos_now.transform.translation.x
+        now_y = pos_now.transform.translation.y
 
-        x = meta_x - pos_now_x
-        y = meta_y - pos_now_y
-
+        x = meta_x - now_x
+        y = meta_y - now_y
         if abs(x) < 0.5 and abs(y) < 0.5:
             print(f"LLegaste al destino:{x},{y}")
             punto_final=get_coords()
@@ -249,11 +249,13 @@ class Final(smach.State):
         #####Accion
         tetha = 0
         meta_x, meta_y = meta.get_metaPosition().pose.position.x,meta.get_metaPosition().pose.position.y
-        pos_now_x = get_coords().transform.translation.x
-        pos_now_y = get_coords().transform.translation.y
+        pos_now = get_coords()
 
-        x = meta_x - pos_now_x
-        y = meta_y - pos_now_y
+        now_x = pos_now.transform.translation.x
+        now_y = pos_now.transform.translation.y
+
+        x = meta_x - now_x
+        y = meta_y - now_y
 
         if abs(x) < 0.5 and abs(y) < 0.5:
             print(f"LLegaste al destino:{x},{y}")
