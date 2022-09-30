@@ -163,7 +163,7 @@ class S1(smach.State):
                 tetha = 3*(np.pi/2)
 
         print("theta: ",tetha)
-        time.sleep(3)
+        time.sleep(1)
         
         return 'outcome1'
 
@@ -203,10 +203,14 @@ class S2_5(smach.State):
 
         x = meta_x - now_x
         y = meta_y - now_y
-        if abs(x) < 0.5 and abs(y) < 0.5:
+
+        h = np.sqrt(x**2+y**2)
+
+        if h < 2:
             print(f"LLegaste al destino:{x},{y}")
             punto_final=get_coords()
             print ( 'tiempo = '+ str(punto_final.header.stamp.to_sec()) , punto_final.transform )
+            print(f"Tiempo final: {punto_final.header.stamp.to_sec()-punto_inicial.header.stamp.to_sec()}")
             return 'outcome2'
         else:
             return 'outcome1'
@@ -257,7 +261,9 @@ class Final(smach.State):
         x = meta_x - now_x
         y = meta_y - now_y
 
-        if abs(x) < 0.5 and abs(y) < 0.5:
+        h = np.sqrt(x**2+y**2)
+
+        if h < 2:
             print(f"LLegaste al destino:{x},{y}")
             punto_final=get_coords()
             print ( 'tiempo = '+ str(punto_final.header.stamp.to_sec()) , punto_final.transform )
@@ -293,12 +299,14 @@ if __name__== '__main__':
     with sm:
         #State machine for evasion
         smach.StateMachine.add("INICIO",   Inicio(),  transitions = {'fail':'END', 'succ':'s_1'})
-        smach.StateMachine.add("s_1",   S1(),  transitions = {'outcome1':'s_2','outcome2':'END'})
+        smach.StateMachine.add("s_1",   S1(),  transitions = {'outcome1':'s_2_5','outcome2':'END'})
+        smach.StateMachine.add("s_2_5",   S2_5(),  transitions = {'outcome1':'s_2','outcome2':'Bonus'})
         #smach.StateMachine.add("s_1",   S1(),  transitions = {'outcome1':'END','outcome2':'END'})
-        smach.StateMachine.add("s_2",   S2(),  transitions = {'outcome1':'s_3','outcome2':'s_2_5'})
-        smach.StateMachine.add("s_2_5",   S2_5(),  transitions = {'outcome1':'s_1','outcome2':'END'})
+        smach.StateMachine.add("s_2",   S2(),  transitions = {'outcome1':'s_3','outcome2':'s_1'})
         smach.StateMachine.add("s_3",   S3(),  transitions = {'outcome1':'FINAL','outcome2':'s_3'})
-        smach.StateMachine.add("FINAL",   Final(),  transitions = {'outcome1':'s_2','outcome2':'END'})
+        smach.StateMachine.add("FINAL",   Final(),  transitions = {'outcome1':'s_2','outcome2':'Bonus'})
+
+        smach.StateMachine.add("Bonus",   S1(),  transitions = {'outcome1':'END','outcome2':'END'})
         
 
 
