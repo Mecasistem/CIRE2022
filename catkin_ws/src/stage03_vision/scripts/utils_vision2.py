@@ -19,6 +19,9 @@ def move_base_vel(vx, vy, vw):
     base_vel_pub.publish(twist)
 
 def move_base(x,y,yaw,timeout=5):
+    rospy.init_node('base_and_sensor')    ### Conectamos/creamos un nodo llamado base and sensor 
+    base_vel_pub = rospy.Publisher('/hsrb/command_velocity', Twist, queue_size=10)## Declaramos un publisher que ha 
+    ###de enviar mensajes tipo Twist al topico hsrb/command_velocity
     start_time = rospy.Time.now().to_sec()
     while rospy.Time.now().to_sec() - start_time < timeout:  
         move_base_vel(x, y, yaw)

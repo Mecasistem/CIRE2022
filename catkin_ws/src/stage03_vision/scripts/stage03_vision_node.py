@@ -41,13 +41,13 @@ def callback_pcv(msg):
     kernel = np.ones((5, 5), np.uint8)
     eroded_mask=cv2.erode(mask,kernel)
     dilated_mask=cv2.dilate(eroded_mask,kernel)
-    #eroded_mask=cv2.erode(eroded_mask,kernel)
-    #dilated_mask=cv2.dilate(eroded_mask,kernel)
+    dilated_mask=cv2.dilate(dilated_mask,kernel)
     contours, hierarchy = cv2.findContours(dilated_mask.astype('uint8'),cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
     coord1 = []
     coord2 = centroids(contours, arr, coord1)
-    #print("COORDENADAS: " + str(coord2))
+    
     aux = 0
+
     for c in coord2:
         x,y,z=c
         print(c)
@@ -56,15 +56,16 @@ def callback_pcv(msg):
         else:
             broadcaster.sendTransform((x,y,z),(0,0,0,1), rospy.Time.now(), 'Object'+str(aux),"head_rgbd_sensor_link")
             aux += 1
-
+    
 
 def main():
-    
-    #move_base(0,0,0.15*np.pi)
+    #move_base(0,0,0.5*np.pi)
     #move_h_g()
-    img = rospy.Subscriber('/hsrb/head_rgbd_sensor/depth_registered/rectified_points', PointCloud2, callback_pcv)
+    
+    rospy.Subscriber('/hsrb/head_rgbd_sensor/depth_registered/rectified_points', PointCloud2, callback_pcv)
+    rospy.sleep(2)
     #rospy.Subscriber('hsrb/head_rgbd_sensor/rgb/image_rect_color', Image, callback_image)
-    rospy.spin()
+    #rospy.spin()
 
 if __name__ == '__main__':
     main()
