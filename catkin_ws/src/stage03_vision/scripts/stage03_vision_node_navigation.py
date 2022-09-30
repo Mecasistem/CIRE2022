@@ -80,13 +80,13 @@ def get_lectura_cuant():
 
 class Inicio (smach.State):
     def __init__(self):
-        smach.State.__init__(self, outcomes=['succ','fail']) #shor for success
+        smach.State.__init__(self, outcomes=['succ','finish']) #shor for success
         
         
 
 
     def execute(self,userdata):
-        global punto_inicial
+        global punto_inicial, coordenadaActual
     	# Aqui va lo que se desea ejecutar en el estado
 
         print('inicializando')
@@ -105,11 +105,16 @@ class Inicio (smach.State):
         #meta_leida = PoseStamped() 
          ##### EJEMPLO los equipos deben leer la meta del topico, comentar esta linea
         ####################################################################
-        punto_inicial = get_coords()
-        print('Tiempo = '+ str(punto_inicial.header.stamp.to_sec()) , punto_inicial.transform )
-        print('Meta leida: \n', meta.get_metaPosition())
-        print('arrancando')
-        return 'succ'
+
+        coordenadaActual = coord.get_Next_Coordinate()
+        if coordenadaActual != 0:
+            punto_inicial = get_coords()
+            print('Tiempo = '+ str(punto_inicial.header.stamp.to_sec()) , punto_inicial.transform )
+            print('Meta leida: \n', coordenadaActual)
+            print('arrancando')
+            return 'succ'
+        else:
+            return 'finish'
 
 class S1(smach.State):
     def __init__(self):
@@ -121,7 +126,7 @@ class S1(smach.State):
         print('robot Estado S_1')
         #####Accion
         tetha = 0
-        meta_x, meta_y = meta.get_metaPosition().pose.position.x,meta.get_metaPosition().pose.position.y
+        meta_x, meta_y = coordenadaActual.pose.position.x,coordenadaActual.pose.position.y
         
         pos_now = get_coords()
         now_x,now_y = pos_now.transform.translation.x, pos_now.transform.translation.y
@@ -196,7 +201,7 @@ class S2_5(smach.State):
         print('robot Estado S_Intermedio_Final')
         #####Accion
         tetha = 0
-        meta_x, meta_y = meta.get_metaPosition().pose.position.x,meta.get_metaPosition().pose.position.y
+        meta_x, meta_y = coordenadaActual.pose.position.x,coordenadaActual.pose.position.y
         pos_now = get_coords()
         now_x = pos_now.transform.translation.x
         now_y = pos_now.transform.translation.y
@@ -252,7 +257,7 @@ class Final(smach.State):
         print('robot Estado S_Final')
         #####Accion
         tetha = 0
-        meta_x, meta_y = meta.get_metaPosition().pose.position.x,meta.get_metaPosition().pose.position.y
+        meta_x, meta_y = coordenadaActual.pose.position.x,coordenadaActual.pose.position.y
         pos_now = get_coords()
 
         now_x = pos_now.transform.translation.x
@@ -279,11 +284,11 @@ class Final(smach.State):
 
 
 def init(node_name):
-    global laser, base_vel_pub, meta, loop
+    global laser, base_vel_pub, coord, loop
     rospy.init_node(node_name)
     base_vel_pub = rospy.Publisher('/hsrb/command_velocity', Twist, queue_size=10)
     laser = Laser()  
-    meta = metaPoint()
+    coord = metaCordenadas([(0.0,1.21),(-3.0,4.0),(3.9,5.6)])
     loop = rospy.Rate(10)
 
 
@@ -298,15 +303,16 @@ if __name__== '__main__':
 
     with sm:
         #State machine for evasion
-        smach.StateMachine.add("INICIO",   Inicio(),  transitions = {'fail':'END', 'succ':'s_1'})
+        smach.StateMachine.add("INICIO",   Inicio(),  transitions = {'finish':'END', 'succ':'s_1'})
         smach.StateMachine.add("s_1",   S1(),  transitions = {'outcome1':'s_2_5','outcome2':'END'})
-        smach.StateMachine.add("s_2_5",   S2_5(),  transitions = {'outcome1':'s_2','outcome2':'Bonus'})
+        smach.StateMachine.add("s_2_5",   S2_5(),  transitions = {'outcome1':'s_2','outcome2':'Bonus_S1'})
         #smach.StateMachine.add("s_1",   S1(),  transitions = {'outcome1':'END','outcome2':'END'})
         smach.StateMachine.add("s_2",   S2(),  transitions = {'outcome1':'s_3','outcome2':'s_1'})
         smach.StateMachine.add("s_3",   S3(),  transitions = {'outcome1':'FINAL','outcome2':'s_3'})
-        smach.StateMachine.add("FINAL",   Final(),  transitions = {'outcome1':'s_2','outcome2':'Bonus'})
+        smach.StateMachine.add("FINAL",   Final(),  transitions = {'outcome1':'s_2','outcome2':'Bonus_S1'})
 
-        smach.StateMachine.add("Bonus",   S1(),  transitions = {'outcome1':'END','outcome2':'END'})
+        smach.StateMachine.add("Bonus_S1",   S1(),  transitions = {'outcome1':'INICIO','outcome2':'INICIO'})
+
         
 
 
