@@ -40,8 +40,12 @@ def callback_pcv(msg):
     mask[idx,idy]=255
     kernel = np.ones((5, 5), np.uint8)
     eroded_mask=cv2.erode(mask,kernel)
+    #dilated_mask=cv2.dilate(eroded_mask,kernel)
+
+    eroded_mask=cv2.erode(eroded_mask,kernel)
+    eroded_mask=cv2.erode(eroded_mask, kernel)
+
     dilated_mask=cv2.dilate(eroded_mask,kernel)
-    dilated_mask=cv2.dilate(dilated_mask,kernel)
     contours, hierarchy = cv2.findContours(dilated_mask.astype('uint8'),cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
     coord1 = []
     coord2 = centroids(contours, arr, coord1)
