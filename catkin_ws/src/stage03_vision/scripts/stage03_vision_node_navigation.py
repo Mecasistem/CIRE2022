@@ -12,7 +12,8 @@ import ros_numpy
 from utils_evasion import *
 import tf2_ros
 from tf.transformations import euler_from_quaternion, quaternion_from_euler
-
+import moveit_commander
+import moveit_msgs.msg
 
 ########## Functions for takeshi states ##########
 
@@ -277,20 +278,34 @@ class Final(smach.State):
         else:
             return 'outcome1'
 
+class vision(smach.State):
+    def __init__(self):
+        smach.State.__init__(self, outcomes=['outcome1','outcome2'])
 
-
+    def execute(self,userdata):
+        global pos
+        print("Durmiendo")
+        if pos != 0:
+            head.go(np.array((0,-.15*np.pi)))
+        pos += 1
+        time.sleep(25)
+        return "outcome1"
 
 
 
 
 def init(node_name):
-    global laser, base_vel_pub, coord, loop
+    global laser, base_vel_pub, coord, loop, pos, head
     rospy.init_node(node_name)
     base_vel_pub = rospy.Publisher('/hsrb/command_velocity', Twist, queue_size=10)
     laser = Laser()  
-    coord = metaCordenadas([(0.0,1.21),(-3.0,4.0),(3.9,5.6)])
+    coord = metaCordenadas([(-0.2,1.21),(-3.0,4.0),(3.9,5.6)])
     loop = rospy.Rate(10)
-
+    pos = 0
+    head = moveit_commander.MoveGroupCommander('head')
+    arm =  moveit_commander.MoveGroupCommander('arm')
+    arm.set_named_target('go')
+    arm.go()
 
 #Entry point
 if __name__== '__main__':
@@ -311,7 +326,8 @@ if __name__== '__main__':
         smach.StateMachine.add("s_3",   S3(),  transitions = {'outcome1':'FINAL','outcome2':'s_3'})
         smach.StateMachine.add("FINAL",   Final(),  transitions = {'outcome1':'s_2','outcome2':'Bonus_S1'})
 
-        smach.StateMachine.add("Bonus_S1",   S1(),  transitions = {'outcome1':'INICIO','outcome2':'INICIO'})
+        smach.StateMachine.add("Bonus_S1",   S1(),  transitions = {'outcome1':'wait_vision','outcome2':'wait_vision'})
+        smach.StateMachine.add("wait_vision",  vision(),  transitions = {'outcome1':'INICIO','outcome2':'INICIO'})
 
         
 

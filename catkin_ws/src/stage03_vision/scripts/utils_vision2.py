@@ -10,6 +10,8 @@ from geometry_msgs.msg import Twist
 rospy.init_node('base_and_sensor')    ### Conectamos/creamos un nodo llamado base and sensor 
 base_vel_pub = rospy.Publisher('/hsrb/command_velocity', Twist, queue_size=10)## Declaramos un publisher que ha 
 ###de enviar mensajes tipo Twist al topico hsrb/command_velocity
+listener = tf.TransformListener()
+aux2=0
 
 def move_base_vel(vx, vy, vw):
     twist = Twist()
@@ -27,8 +29,6 @@ def move_base(x,y,yaw,timeout=5):
         move_base_vel(x, y, yaw)
 
 def move_h_g():
-    listener = tf.TransformListener()
-
     head = moveit_commander.MoveGroupCommander('head')
     whole_body=moveit_commander.MoveGroupCommander('whole_body_weighted')
     arm =  moveit_commander.MoveGroupCommander('arm')
@@ -61,3 +61,36 @@ def centroids(contours, points, coord):
         #aux = np.asarray(cent)
         coord.append(cent)
     return coord
+
+def esc_coord(aux):
+    temp = []
+    coord_rect = {}
+    global aux2
+
+    try:
+        f = open("/home/cire2022/CIRE2022/catkin_ws/src/stage03_vision/scripts/prueba.txt", "x")
+        f.close()
+        f = open("/home/cire2022/CIRE2022/catkin_ws/src/stage03_vision/scripts/prueba.txt", "w")
+        f.write("Coordenadas:\n")
+        f.close()
+    except:
+        print("File has already been created")
+    
+    for i in range(aux):
+        coordnd, ns = listener.lookupTransform('map','Object'+str(i),rospy.Time(0))
+        coord_rect['Object'+str(i) + ":"] = str(coordnd)
+    
+    f = open("/home/cire2022/CIRE2022/catkin_ws/src/stage03_vision/scripts/prueba.txt", "r")
+    for line in f:
+        temp.append(f.read(8))
+    f.close()
+
+    f = open("/home/cire2022/CIRE2022/catkin_ws/src/stage03_vision/scripts/prueba.txt", "a")
+    for cr in coord_rect: 
+        if cr in temp:
+            print("Object has already been registered")
+        else:
+            f.write(str(cr)+str(coord_rect[cr]) + "\n")
+        aux2+=1
+    f.flush()
+    f.close()
