@@ -7,4 +7,6 @@ catkin_ws/src/stage02_meta/scrips
 catkin_ws/src/stage03_vision/scripts/degub.txt
 Media/output_contors.png
 catkin_ws/src/stage03_vision/scripts/debug_stage03.ipynb
-catkin_ws/src/stage03_vision/scripts/stage03_vision\ scripts.zip
+catkin_ws/src/stage03_vision/scripts/debug2.ipynb
+catkin_ws/src/stage03_vision/scripts/prueba.txt
+catkin_ws/src/stage03_vision/scripts/utils.py
