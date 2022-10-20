@@ -16,7 +16,7 @@ from nav_msgs.srv import GetMap
 from nav_msgs.srv import GetMapResponse
 from nav_msgs.srv import GetMapRequest
 
-NAME = "NOMBRE DEL EQUIPO"
+NAME = "MECASISTEM"
 
 def get_inflated_map(static_map, inflation_cells):
     print("Inflating map by " + str(inflation_cells) + " cells")
@@ -39,31 +39,53 @@ def get_inflated_map(static_map, inflation_cells):
     return inflated
 
 def callback_inflated_map(req):
-    global inflated_map
+    global inflated_map,inflation_radius,new_inflation_radius, grid_map,old_grid_map
+    old_grid_map = grid_map
+    grid_map = rospy.ServiceProxy("/dynamic_map", GetMap)().map
+
+    if rospy.has_param("/path_planning/inflation_radius"):
+        new_inflation_radius = rospy.get_param("/path_planning/inflation_radius")
+
+
+    if (grid_map.header.stamp.secs != old_grid_map.header.stamp.secs) or (new_inflation_radius != inflation_radius):
+        map_info = grid_map.info
+        width, height, res = map_info.width, map_info.height, map_info.resolution
+        grid_map_reshape = numpy.reshape(numpy.asarray(grid_map.data, dtype='int'), (height, width))
+
+        #Nuevo calculo del mapa de inflacion 
+        if new_inflation_radius != None:
+            inflation_radius  = new_inflation_radius
+
+        inflated_map_data = get_inflated_map(grid_map_reshape, round(inflation_radius/res))
+        inflated_map_data = numpy.ravel(numpy.reshape(inflated_map_data, (width*height, 1)))
+        inflated_map      = OccupancyGrid(info=map_info, data=inflated_map_data)
+
     return GetMapResponse(map=inflated_map)
 
 def main():
-    global cost_map, inflated_map
+    global inflated_map,inflation_radius, new_inflation_radius, grid_map,old_grid_map
     print("EJERCICIO 1 - INFLADO DE OBSTACULOS" + NAME)
     rospy.init_node("map_inflation")
     rospy.wait_for_service('/dynamic_map')
     pub_map  = rospy.Publisher("/inflated_map", OccupancyGrid, queue_size=10)
-    grid_map = rospy.ServiceProxy("/dynamic_map", GetMap)().map
-    map_info = grid_map.info
-    width, height, res = map_info.width, map_info.height, map_info.resolution
-    grid_map = numpy.reshape(numpy.asarray(grid_map.data, dtype='int'), (height, width))
+    # grid_map = rospy.ServiceProxy("/dynamic_map", GetMap)().map
+    # map_info = grid_map.info
+    # width, height, res = map_info.width, map_info.height, map_info.resolution
+    # grid_map = numpy.reshape(numpy.asarray(grid_map.data, dtype='int'), (height, width))
     rospy.Service('/inflated_map', GetMap, callback_inflated_map)
     loop = rospy.Rate(2)
     
     inflation_radius = 0.1
+    new_inflation_radius = None
+    grid_map = GetMapResponse(map=OccupancyGrid()).map 
     while not rospy.is_shutdown():
-        if rospy.has_param("/path_planning/inflation_radius"):
-            new_inflation_radius = rospy.get_param("/path_planning/inflation_radius")
-        if new_inflation_radius != inflation_radius:
-            inflation_radius  = new_inflation_radius
-            inflated_map_data = get_inflated_map(grid_map, round(inflation_radius/res))
-            inflated_map_data = numpy.ravel(numpy.reshape(inflated_map_data, (width*height, 1)))
-            inflated_map      = OccupancyGrid(info=map_info, data=inflated_map_data)
+        # if rospy.has_param("/path_planning/inflation_radius"):
+        #     new_inflation_radius = rospy.get_param("/path_planning/inflation_radius")
+        # if new_inflation_radius != inflation_radius:
+        #     inflation_radius  = new_inflation_radius
+        #     inflated_map_data = get_inflated_map(grid_map, round(inflation_radius/res))
+        #     inflated_map_data = numpy.ravel(numpy.reshape(inflated_map_data, (width*height, 1)))
+        #     inflated_map      = OccupancyGrid(info=map_info, data=inflated_map_data)
         pub_map.publish(callback_inflated_map(GetMapRequest()).map)
         loop.sleep()
 
