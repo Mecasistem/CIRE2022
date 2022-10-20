@@ -46,9 +46,9 @@ def main():
     global cost_map, inflated_map
     print("EJERCICIO 1 - INFLADO DE OBSTACULOS" + NAME)
     rospy.init_node("map_inflation")
-    rospy.wait_for_service('/static_map')
+    rospy.wait_for_service('/dynamic_map')
     pub_map  = rospy.Publisher("/inflated_map", OccupancyGrid, queue_size=10)
-    grid_map = rospy.ServiceProxy("/static_map", GetMap)().map
+    grid_map = rospy.ServiceProxy("/dynamic_map", GetMap)().map
     map_info = grid_map.info
     width, height, res = map_info.width, map_info.height, map_info.resolution
     grid_map = numpy.reshape(numpy.asarray(grid_map.data, dtype='int'), (height, width))
@@ -61,7 +61,7 @@ def main():
             new_inflation_radius = rospy.get_param("/path_planning/inflation_radius")
         if new_inflation_radius != inflation_radius:
             inflation_radius  = new_inflation_radius
-            inflated_map_data = get_inflated_map(grid_map, int(inflation_radius/res))
+            inflated_map_data = get_inflated_map(grid_map, round(inflation_radius/res))
             inflated_map_data = numpy.ravel(numpy.reshape(inflated_map_data, (width*height, 1)))
             inflated_map      = OccupancyGrid(info=map_info, data=inflated_map_data)
         pub_map.publish(callback_inflated_map(GetMapRequest()).map)

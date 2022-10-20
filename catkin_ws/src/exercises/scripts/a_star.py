@@ -40,8 +40,8 @@ def a_star(start_r, start_c, goal_r, goal_c, grid_map, cost_map):
     # EJERCICIO:
     # Modifique la lista de nodos adyacentes para usar conectividad 8 en lugar de 4
     #
-    adjacent_idx   = [[1,0],[0,1],[-1,0],[0,-1]]
-    #adjacent_idx      = [[1,0],[0,1],[-1,0],[0,-1], [1,1], [-1,1], [-1,-1],[1,-1]]
+    #adjacent_idx   = [[1,0],[0,1],[-1,0],[0,-1]]
+    adjacent_idx      = [[1,0],[0,1],[-1,0],[0,-1], [1,1], [-1,1], [-1,-1],[1,-1]]
     #
 
     open_list = [] 
@@ -63,10 +63,11 @@ def a_star(start_r, start_c, goal_r, goal_c, grid_map, cost_map):
             # Modifique el calculo de 'g' y 'h' para usar distancia euclideana en lugar de Manhattan.
             # Fije h=0 para ver el impacto en el tiempo de ejecucion.
             #
-            g = g_values[row, col] + abs(row-r) + abs(col-c) + cost_map[r][c]
-            h = abs(goal_r - r) + abs(goal_c - c)
-            # g = g_values[row, col] + math.sqrt((row-r)**2 + (col - c)**2) + cost_map[r][c]
-            # h = math.sqrt((goal_r-r)**2 + (goal_c - c)**2)
+            #g = g_values[row, col] + abs(row-r) + abs(col-c) + cost_map[r][c]
+            #h = abs(goal_r - r) + abs(goal_c - c)
+            g = g_values[row, col] + math.sqrt((row-r)**2 + (col - c)**2) + cost_map[r][c]
+            h = math.sqrt((goal_r-r)**2 + (goal_c - c)**2)
+            #h = 0
             #
             
             f = g + h                         
@@ -91,7 +92,7 @@ def a_star(start_r, start_c, goal_r, goal_c, grid_map, cost_map):
 
 def get_maps():
     print("Getting inflated and cost maps...")
-    clt_static_map = rospy.ServiceProxy("/static_map"  , GetMap)
+    clt_static_map = rospy.ServiceProxy("/dynamic_map"  , GetMap)
     clt_cost_map   = rospy.ServiceProxy("/cost_map"    , GetMap)
     clt_inflated   = rospy.ServiceProxy("/inflated_map", GetMap)
     try:
@@ -119,7 +120,7 @@ def callback_a_star(req):
     [gx, gy] = [req.goal .pose.position.x, req.goal .pose.position.y]
     [zx, zy] = [s_map.info.origin.position.x, s_map.info.origin.position.y]
     print("Calculating path by A* from " + str([sx, sy])+" to "+str([gx, gy]))
-    path = a_star(int((sy-zy)/res), int((sx-zx)/res), int((gy-zy)/res), int((gx-zx)/res), inflated_map, cost_map)
+    path = a_star(round((sy-zy)/res), round((sx-zx)/res), round((gy-zy)/res), round((gx-zx)/res), inflated_map, cost_map)
     msg_path.poses = []
     for [r,c] in path:
         msg_path.poses.append(PoseStamped(pose=Pose(position=Point(x=(c*res + zx), y=(r*res + zy)))))
@@ -128,7 +129,7 @@ def callback_a_star(req):
 def main():
     print("EJERCICIO 2 - ALGORITMO A* - " + NAME)
     rospy.init_node("a_star_planning")
-    rospy.wait_for_service('/static_map')
+    rospy.wait_for_service('/dynamic_map')
     rospy.Service('/path_planning/a_star_search'  , GetPlan, callback_a_star)
     pub_path = rospy.Publisher('/path_planning/a_star_path', Path, queue_size=10)
     loop = rospy.Rate(2)

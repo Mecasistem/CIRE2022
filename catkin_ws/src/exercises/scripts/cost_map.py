@@ -61,8 +61,8 @@ def main():
     global cost_map, inflated_map
     print("EJERCICIO 2 - MAPA DE COSTO" + NAME)
     rospy.init_node("cost_maps")
-    rospy.wait_for_service('/static_map')
-    grid_map = rospy.ServiceProxy("/static_map", GetMap)().map
+    rospy.wait_for_service('/dynamic_map')
+    grid_map = rospy.ServiceProxy("/dynamic_map", GetMap)().map
     map_info = grid_map.info
     width, height, res = map_info.width, map_info.height, map_info.resolution
     grid_map = numpy.reshape(numpy.asarray(grid_map.data, dtype='int'), (height, width))
@@ -75,7 +75,7 @@ def main():
             new_cost_radius = rospy.get_param("/path_planning/cost_radius")
         if new_cost_radius != cost_radius:
             cost_radius   = new_cost_radius
-            cost_map_data = get_cost_map(grid_map, int(cost_radius/res))
+            cost_map_data = get_cost_map(grid_map, round(cost_radius/res))
             cost_map_data = numpy.ravel(numpy.reshape(cost_map_data, (width*height, 1)))
             cost_map      = OccupancyGrid(info=map_info, data=cost_map_data) 
         loop.sleep()

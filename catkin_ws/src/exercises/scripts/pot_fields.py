@@ -49,7 +49,7 @@ def attraction_force(robot_x, robot_y, goal_x, goal_y):
     # donde force_x y force_y son las componentes X y Y de la fuerza resultante
     # con respecto al mapa. 
     #
-    alpha = 2.0  #Attraction constant
+    alpha = 1.0  #Attraction constant
     force_x, force_y  = robot_x - goal_x, robot_y - goal_y
     mag = math.sqrt(force_x**2 + force_y**2)
     if mag == 0:
@@ -70,7 +70,7 @@ def rejection_force(robot_x, robot_y, robot_a, laser_readings):
     # fuerza repulsiva resultante con respecto al mapa. 
     #
     beta = 6.0 #Rejection constant
-    d0   = 1.0 #Distance of influence
+    d0   = 2.0 #Distance of influence
     force_x, force_y = 0, 0
     for [distance, angle] in laser_readings:
         if distance < d0 and distance > 0:
