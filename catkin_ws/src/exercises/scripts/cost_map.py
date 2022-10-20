@@ -16,7 +16,7 @@ from nav_msgs.srv import GetMap
 from nav_msgs.srv import GetMapResponse
 from nav_msgs.srv import GetMapRequest
 
-NAME = "NOMBRE DEL EQUIPO"
+NAME = "MECASISTEM"
 
 def get_cost_map(static_map, cost_radius):
     if cost_radius > 20:
@@ -54,30 +54,52 @@ def get_cost_map(static_map, cost_radius):
     return cost_map
 
 def callback_cost_map(req):
-    global cost_map
+    global cost_map, grid_map, old_grid_map, new_cost_radius, cost_radius
+    old_grid_map = grid_map
+    grid_map = rospy.ServiceProxy("/dynamic_map", GetMap)().map
+
+    if rospy.has_param("/path_planning/cost_radius"):
+        new_cost_radius = rospy.get_param("/path_planning/cost_radius")
+
+    if (grid_map.header.stamp.secs != old_grid_map.header.stamp.secs) or (cost_radius != new_cost_radius):
+        map_info = grid_map.info
+        width, height, res = map_info.width, map_info.height, map_info.resolution
+        grid_map_reshape = numpy.reshape(numpy.asarray(grid_map.data, dtype='int'), (height, width))
+
+        if new_cost_radius != None:
+            cost_radius   = new_cost_radius
+
+        cost_map_data = get_cost_map(grid_map_reshape, round(cost_radius/res))
+        cost_map_data = numpy.ravel(numpy.reshape(cost_map_data, (width*height, 1)))
+        cost_map      = OccupancyGrid(info=map_info, data=cost_map_data) 
+
     return GetMapResponse(map=cost_map)
     
 def main():
-    global cost_map, inflated_map
+    global cost_map, old_grid_map, grid_map, new_cost_radius, cost_radius
     print("EJERCICIO 2 - MAPA DE COSTO" + NAME)
     rospy.init_node("cost_maps")
     rospy.wait_for_service('/dynamic_map')
-    grid_map = rospy.ServiceProxy("/dynamic_map", GetMap)().map
-    map_info = grid_map.info
-    width, height, res = map_info.width, map_info.height, map_info.resolution
-    grid_map = numpy.reshape(numpy.asarray(grid_map.data, dtype='int'), (height, width))
-    rospy.Service('/cost_map'    , GetMap, callback_cost_map)
+    pub_map  = rospy.Publisher("/cost_map", OccupancyGrid, queue_size=10)
+    # grid_map = rospy.ServiceProxy("/dynamic_map", GetMap)().map
+    # map_info = grid_map.info
+    # width, height, res = map_info.width, map_info.height, map_info.resolution
+    # grid_map = numpy.reshape(numpy.asarray(grid_map.data, dtype='int'), (height, width))
+    rospy.Service('/cost_map', GetMap, callback_cost_map)
     loop = rospy.Rate(2)
     
     cost_radius = 0.1
+    new_cost_radius = None
+    grid_map = GetMapResponse(map=OccupancyGrid()).map
     while not rospy.is_shutdown():
-        if rospy.has_param("/path_planning/cost_radius"):
-            new_cost_radius = rospy.get_param("/path_planning/cost_radius")
-        if new_cost_radius != cost_radius:
-            cost_radius   = new_cost_radius
-            cost_map_data = get_cost_map(grid_map, round(cost_radius/res))
-            cost_map_data = numpy.ravel(numpy.reshape(cost_map_data, (width*height, 1)))
-            cost_map      = OccupancyGrid(info=map_info, data=cost_map_data) 
+        # if rospy.has_param("/path_planning/cost_radius"):
+        #     new_cost_radius = rospy.get_param("/path_planning/cost_radius")
+        # if new_cost_radius != cost_radius:
+        #     cost_radius   = new_cost_radius
+        #     cost_map_data = get_cost_map(grid_map, round(cost_radius/res))
+        #     cost_map_data = numpy.ravel(numpy.reshape(cost_map_data, (width*height, 1)))
+        #     cost_map      = OccupancyGrid(info=map_info, data=cost_map_data) 
+        pub_map.publish(callback_cost_map(GetMapRequest()).map)
         loop.sleep()
 
 if __name__ == '__main__':
