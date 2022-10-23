@@ -78,6 +78,9 @@ def main():
     inflation_radius = 0.1
     new_inflation_radius = None
     grid_map = GetMapResponse(map=OccupancyGrid()).map 
+
+    inflated_map = OccupancyGrid()
+    inflated_map.header.frame_id = "map"
     while not rospy.is_shutdown():
         # if rospy.has_param("/path_planning/inflation_radius"):
         #     new_inflation_radius = rospy.get_param("/path_planning/inflation_radius")
@@ -86,7 +89,7 @@ def main():
         #     inflated_map_data = get_inflated_map(grid_map, round(inflation_radius/res))
         #     inflated_map_data = numpy.ravel(numpy.reshape(inflated_map_data, (width*height, 1)))
         #     inflated_map      = OccupancyGrid(info=map_info, data=inflated_map_data)
-        pub_map.publish(callback_inflated_map(GetMapRequest()).map)
+        pub_map.publish(inflated_map)
         loop.sleep()
 
 if __name__ == '__main__':

@@ -91,6 +91,9 @@ def main():
     cost_radius = 0.1
     new_cost_radius = None
     grid_map = GetMapResponse(map=OccupancyGrid()).map
+
+    cost_map = OccupancyGrid()
+    cost_map.header.frame_id = "map"
     while not rospy.is_shutdown():
         # if rospy.has_param("/path_planning/cost_radius"):
         #     new_cost_radius = rospy.get_param("/path_planning/cost_radius")
@@ -99,7 +102,7 @@ def main():
         #     cost_map_data = get_cost_map(grid_map, round(cost_radius/res))
         #     cost_map_data = numpy.ravel(numpy.reshape(cost_map_data, (width*height, 1)))
         #     cost_map      = OccupancyGrid(info=map_info, data=cost_map_data) 
-        pub_map.publish(callback_cost_map(GetMapRequest()).map)
+        pub_map.publish(cost_map)
         loop.sleep()
 
 if __name__ == '__main__':
