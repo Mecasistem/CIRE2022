@@ -58,8 +58,9 @@ def main():
             print("Exploracion terminada")
             client.send_goal(posinicial)
             client.wait_for_result(rospy.Duration.from_sec(5.0))
-            os.chdir("~/CIRE2022/catkin_ws/src/stage04_mv")
+            os.chdir("/home/cire2022/CIRE2022/catkin_ws/src/stage04_mv")
             os.system("mkdir maps")
+            os.chdir("/home/cire2022/CIRE2022/catkin_ws/src/stage04_mv/maps")
             os.system("rosrun map_server map_saver -f mymap map:=/map")
             print("Mapas Guardados")
             break

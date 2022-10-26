@@ -62,7 +62,7 @@
     <param name="orientation_scale" value="0.0"/>
     <param name="gain_scale" value="1.0"/>
     <param name="transform_tolerance" value="0.3"/>
-    <param name="min_frontier_size" value="0.60"/> 
+    <param name="min_frontier_size" value="0.44"/> 
   </node> 
 
   <node name="stage04_mv_node" pkg="stage04_mv" type="stage04_mv_node.py" output="screen"/>

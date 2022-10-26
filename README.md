@@ -47,7 +47,12 @@ Facultad de Ingeniería, UNAM <br>
 marco.negrete@ingenieria.unam.edu<br>
 
 ## Ubicación de los archivos
-* La solucion del problema de la etapa 3 se encuentra dentro de la siguiente carpeta: CIRE2022/catkin_ws/src/<br>
- En el paquete stage03_vision dentro de los scrips se encuentra stage03_vision_node_navigation.py que es el archivo<br>
- para la navegacion de esta etapa, asi como stage03_vision_node.py es el archivo de la vision, asi como sus respectivas liberias
+* La solucion del problema de la etapa 4 se encuentra dentro de la siguiente carpeta: CIRE2022/catkin_ws/src/ 
+ En el paquete stage04_mv dentro de los scrips se encuentra stage04_mv.launch que es el archivo .launch que ejecuta todos los nodos de los paquetes de ros y el archivo stage04_mv_node-py para realizar la exploracion autonoma del entorno del robot takeshi 
+
+ Para poder ejecutar el programa se ocupan los paquetes de ros de explore_lite y move_base asi como sus dependencias 
+
+ Para comodidad se puede ejecutar el siguiente comando para instalar de una sola vez las dependencias 
+
+ * $ rosdep install --from-paths src --ignore-src -r -y
 

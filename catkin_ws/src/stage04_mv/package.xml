@@ -72,6 +72,7 @@
   <build_depend>sensor_msgs</build_depend>
   <build_depend>std_msgs</build_depend>
   <build_depend>voxel_grid</build_depend>
+  <build_depend>explore_lite</build_depend>
   <build_export_depend>amcl</build_export_depend>
   <build_export_depend>base_local_planner</build_export_depend>
   <build_export_depend>carrot_planner</build_export_depend>
@@ -95,6 +96,7 @@
   <build_export_depend>sensor_msgs</build_export_depend>
   <build_export_depend>std_msgs</build_export_depend>
   <build_export_depend>voxel_grid</build_export_depend>
+  <build_export_depend>explore_lite</build_export_depend>
   <exec_depend>amcl</exec_depend>
   <exec_depend>base_local_planner</exec_depend>
   <exec_depend>carrot_planner</exec_depend>
@@ -118,6 +120,7 @@
   <exec_depend>sensor_msgs</exec_depend>
   <exec_depend>std_msgs</exec_depend>
   <exec_depend>voxel_grid</exec_depend>
+  <exec_depend>explore_lite</exec_depend>
 
 
   <!-- The export tag contains other, unspecified, tags -->

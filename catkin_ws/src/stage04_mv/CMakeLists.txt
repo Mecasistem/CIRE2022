@@ -31,6 +31,7 @@ find_package(catkin REQUIRED COMPONENTS
   sensor_msgs
   std_msgs
   voxel_grid
+  explore_lite
 )
 
 ## System dependencies are found with CMake's conventions
