@@ -1,6 +1,7 @@
 # Concurso Iberoamericano de Robótica Espacial 2022
 Programa Espacial Universitario - UNAM
 
+Canal de Youtube del equipo Mecasistem: [Mecasistem CIRE 2022](https://www.youtube.com/@mecasistemconace2219) 
 
 ## Requerimientos
 
